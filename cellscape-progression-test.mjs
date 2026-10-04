@@ -1,0 +1,18 @@
+import { readFileSync } from "node:fs";
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const tabs=await (await fetch("http://127.0.0.1:9223/json")).json();
+const page=tabs.find(t=>t.type==="page"&&t.url.includes("127.0.0.1:4173"));
+if(!page)throw new Error("NO_PAGE");
+const ws=new WebSocket(page.webSocketDebuggerUrl);
+await new Promise((resolve,reject)=>{ws.onopen=resolve;ws.onerror=reject});
+let id=0;const pending=new Map();ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id&&pending.has(m.id)){pending.get(m.id)(m);pending.delete(m.id)}};
+const cdp=(method,params={})=>new Promise((resolve,reject)=>{const i=++id;pending.set(i,m=>m.error?reject(new Error(JSON.stringify(m.error))):resolve(m));ws.send(JSON.stringify({id:i,method,params}))});
+const ev=async expression=>(await cdp("Runtime.evaluate",{expression,returnByValue:true,awaitPromise:true})).result.result.value;
+await ev("location.href='http://127.0.0.1:4173/?v=4';true");await sleep(400);await ev("localStorage.clear();location.reload();true");await sleep(300);
+const menu=await ev("({missions:document.querySelectorAll('.mission').length,level:document.querySelector('#levelBadge').textContent})");
+await ev("document.querySelector('#dailyClaim').click();true");await sleep(50);
+const daily=await ev("({coins:progression.coins,xp:progression.xp,streak:progression.streak})");
+await ev("document.querySelector('#play').click();true");await sleep(100);
+const speeds=await ev("({small:speed({mass:40,powerType:'',powerT:0}),medium:speed({mass:150,powerType:'',powerT:0}),large:speed({mass:1000,powerType:'',powerT:0})})");
+if(menu.missions!==3||daily.coins<=0||daily.xp<=0||daily.streak!==1||!(speeds.small>speeds.medium&&speeds.medium>speeds.large))throw new Error("PROGRESSION_BALANCE_BAD");
+console.log("PROGRESSION_BALANCE_OK",JSON.stringify({menu,daily,speeds}));ws.close();
