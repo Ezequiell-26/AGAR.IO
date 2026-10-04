@@ -408,6 +408,14 @@ function refillHotZone(c){
 }
 function eatPellets(c){
  const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.12:c.mass<160?1.07:1, baseGain=c.mass<100?2.2:c.mass<250?1.9:c.mass<600?1.65:1.45, gain=(c.powerType==='FRENZY'&&c.powerT>0?baseGain*1.65:baseGain)*pickupBonus;
+ if(radius(c.mass)>=WORLD/2){
+  if(frameCount%12!==0)return;
+  const batch=Math.min(320,game.pellets.length);
+  c.mass+=batch*gain;
+  for(let i=0;i<batch;i++){const idx=(frameCount*batch+i)%game.pellets.length,p=game.pellets[idx];p.x=rng(-WORLD/2,WORLD/2);p.y=rng(-WORLD/2,WORLD/2);p.r=rng(3,7);p.c=colors[Math.floor(rng(0,colors.length))]}
+  if(c===game.me){game.pelletsCollected+=batch;updateMission('pellets',game.pelletsCollected)}
+  return;
+ }
  for(let i=game.pellets.length-1;i>=0;i--){const p=game.pellets[i];if(dist2(c,p)<reach2){c.mass+=gain;game.pellets[i]=spawnPelletNear(c);if(c===game.me){game.pelletsCollected++;updateMission('pellets',game.pelletsCollected);burst(c.x,c.y,p.c,2,95)}}}
 }
 function collide(){
@@ -457,7 +465,9 @@ function drawGrid(){
 }
 function draw(){
  if(!game){return}
- drawGrid();const z=game.cam.zoom;
+ const z=game.cam.zoom,meRadius=radius(game.me.mass)*z;
+ if(meRadius>Math.hypot(W,H)*.85){ctx.fillStyle=game.me.color;ctx.fillRect(0,0,W,H);const m=game.me;if(frameCount%3===0){massEl.textContent=Math.round(m.mass);scoreEl.textContent=Math.round(m.mass);posEl.textContent=Math.round(m.x)+', '+Math.round(m.y);fpsEl.textContent=Math.round(fps)}if(frameCount%12===0){const top=game.cells.slice().sort((a,b)=>b.mass-a.mass).slice(0,8);leadersEl.innerHTML=top.map((c,i)=>'<div class="entry"><span class="n">'+(i+1)+'</span><span class="name">'+c.name+(c.clan?' <span style="color:#7c8cb0">['+c.clan+']</span>':'')+'</span><span class="v">'+Math.round(c.mass)+'</span></div>').join('')}if(frameCount%6===0){updatePowerHud(m);drawMini()}return}
+ drawGrid();
  ctx.save();
  if(game.mode==='battle'){const center=worldToScreen(0,0),zr=game.zoneRadius*z;ctx.fillStyle='rgba(255,90,170,.035)';ctx.beginPath();ctx.arc(center.x,center.y,zr,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,120,200,.42)';ctx.lineWidth=Math.max(2,3*z);ctx.setLineDash([10,12]);ctx.beginPath();ctx.arc(center.x,center.y,zr,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
  const edgeA=worldToScreen(-WORLD/2,-WORLD/2),edgeB=worldToScreen(WORLD/2,WORLD/2);
@@ -470,13 +480,13 @@ function draw(){
  ctx.globalAlpha=1;for(const p of game.ejected||[]){const s=worldToScreen(p.x,p.y);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(s.x,s.y,p.r*z,0,Math.PI*2);ctx.fill()}
  ctx.globalCompositeOperation='source-over';
  const sorted=game.cells.slice().sort((a,b)=>a.mass-b.mass);
- for(const c of sorted){const s=worldToScreen(c.x,c.y),r=radius(c.mass)*z;if(s.x<-r||s.x>W+r||s.y<-r||s.y>H+r)continue;
-  const g=ctx.createRadialGradient(s.x-r*.35,s.y-r*.35,r*.12,s.x,s.y,r);g.addColorStop(0,'#fff');g.addColorStop(.18,c.color);g.addColorStop(1,'#09101f');ctx.fillStyle=g;ctx.shadowColor=c.color;ctx.shadowBlur=Math.min(28,18*z);ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ for(const c of sorted){const s=worldToScreen(c.x,c.y),r=radius(c.mass)*z,drawR=Math.min(r,Math.max(W,H)*1.35);if(s.x<-drawR||s.x>W+drawR||s.y<-drawR||s.y>H+drawR)continue;
+  if(r>Math.max(W,H)){ctx.fillStyle=c.color;ctx.beginPath();ctx.arc(s.x,s.y,drawR,0,Math.PI*2);ctx.fill()}else{const g=ctx.createRadialGradient(s.x-drawR*.35,s.y-drawR*.35,Math.max(1,drawR*.12),s.x,s.y,Math.max(1,drawR));g.addColorStop(0,'#fff');g.addColorStop(.18,c.color);g.addColorStop(1,'#09101f');ctx.fillStyle=g;ctx.shadowColor=c.color;ctx.shadowBlur=Math.min(28,18*z);ctx.beginPath();ctx.arc(s.x,s.y,drawR,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
   ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=Math.max(1,1.5*z);ctx.stroke();
-  if(c===game.me&&c.powerType&&POWERS[c.powerType]){const meta=POWERS[c.powerType];ctx.strokeStyle=meta.color;ctx.globalAlpha=.52;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(s.x,s.y,r+5+Math.sin(frameCount*.12)*2,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
-  if(c.avatar&&r>12){const im=getAvatar(c.avatar);if(im&&im.complete){ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,r*.62,0,Math.PI*2);ctx.clip();ctx.drawImage(im,s.x-r*.62,s.y-r*.62,r*1.24,r*1.24);ctx.restore()}}
-  if(r>18&&settings.names){ctx.fillStyle='#eef4ff';ctx.textAlign='center';ctx.font='800 '+Math.max(10,12*z)+'px system-ui';let label=c.name+(c.clan?' ['+c.clan+']':'')+(settings.mass?' · '+Math.round(c.mass):'');ctx.fillText(label,s.x,s.y+5)}
-  if(c.emote&&r>10){const bw=Math.max(34,Math.min(86,r*1.5)),bh=Math.max(28,r*.58),bx=s.x,by=s.y-r-18;ctx.fillStyle='rgba(6,10,20,.86)';ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx-bw/2,by-bh,bw,bh,10);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='700 '+Math.max(14,Math.min(24,r*.55))+'px system-ui';ctx.textAlign='center';ctx.fillText(c.emote,bx,by-bh*.32)}
+  if(c===game.me&&c.powerType&&POWERS[c.powerType]){const meta=POWERS[c.powerType];ctx.strokeStyle=meta.color;ctx.globalAlpha=.52;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(s.x,s.y,drawR+5+Math.sin(frameCount*.12)*2,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
+  if(c.avatar&&drawR>12){const im=getAvatar(c.avatar);if(im&&im.complete){ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,drawR*.62,0,Math.PI*2);ctx.clip();ctx.drawImage(im,s.x-drawR*.62,s.y-drawR*.62,drawR*1.24,drawR*1.24);ctx.restore()}}
+  if(drawR>18&&settings.names){ctx.fillStyle='#eef4ff';ctx.textAlign='center';ctx.font='800 '+Math.max(10,12*z)+'px system-ui';let label=c.name+(c.clan?' ['+c.clan+']':'')+(settings.mass?' · '+Math.round(c.mass):'');ctx.fillText(label,s.x,s.y+5)}
+  if(c.emote&&drawR>10){const bw=Math.max(34,Math.min(86,drawR*1.5)),bh=Math.max(28,drawR*.58),bx=s.x,by=s.y-drawR-18;ctx.fillStyle='rgba(6,10,20,.86)';ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx-bw/2,by-bh,bw,bh,10);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='700 '+Math.max(14,Math.min(24,drawR*.55))+'px system-ui';ctx.textAlign='center';ctx.fillText(c.emote,bx,by-bh*.32)}
  }
  ctx.restore();
  const m=game.me;
@@ -488,11 +498,3 @@ const mini=document.getElementById('mini'),miniCtx=mini.getContext('2d',{alpha:f
 function drawMini(){
  miniCtx.clearRect(0,0,300,300);miniCtx.fillStyle='#08101d';miniCtx.fillRect(0,0,300,300);
  for(let i=0;i<game.pellets.length;i+=10){const p=game.pellets[i],x=(p.x/WORLD+0.5)*300,y=(p.y/WORLD+0.5)*300;miniCtx.fillStyle=p.c;miniCtx.fillRect(x,y,1.8,1.8)}
- for(const s of game.spikes){const x=(s.x/WORLD+0.5)*300,y=(s.y/WORLD+0.5)*300;miniCtx.fillStyle='#ff4d8d';miniCtx.beginPath();miniCtx.arc(x,y,3.2,0,Math.PI*2);miniCtx.fill()}
- for(const c of game.cells){const x=(c.x/WORLD+0.5)*300,y=(c.y/WORLD+0.5)*300;miniCtx.fillStyle=c===game.me?'#fff':c.color;miniCtx.beginPath();miniCtx.arc(x,y,c===game.me?4:2,0,Math.PI*2);miniCtx.fill()}
-}
-function loop(t){const dt=Math.min(.033,Math.max(.001,(t-last)/1000));last=t;fps+=((1/dt)-fps)*Math.min(1,dt*5);frameCount++;update(dt);draw();requestAnimationFrame(loop)}
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
