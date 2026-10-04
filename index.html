@@ -263,7 +263,8 @@ document.getElementById('privacyOpen').onclick=()=>showInfo('Privacidad','LOCAL'
 let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
 function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)} addEventListener('resize',resize);resize();
 
-const WORLD=9000, PELLETS=1000, BOTS=22, MAX_PARTICLES=180;
+const WORLD=9000, PELLETS=3200, BOTS=22, MAX_PARTICLES=180;
+const PELLET_LOCAL_RESPAWN_CHANCE=.72, PELLET_LOCAL_RADIUS=1900;
 const rng=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist2=(a,b)=>{const x=a.x-b.x,y=a.y-b.y;return x*x+y*y};
 const radius=m=>Math.sqrt(m)*3.2;
@@ -344,9 +345,17 @@ function botThink(b,dt){
  for(const c of game.cells){if(!c.alive||c===b)continue;const d=dist2(b,c);if(c.mass<b.mass*.75&&d<1800*1800){target=c;break}if(c.mass>b.mass*1.25&&d<1200*1200){target={x:b.x-(c.x-b.x),y:b.y-(c.y-b.y)};break}}
  if(target) moveCell(b,target.x,target.y,dt); else moveCell(b,rng(-1000,1000),rng(-1000,1000),dt);
 }
+function spawnPelletNear(c){
+ const local=Math.random()<PELLET_LOCAL_RESPAWN_CHANCE;
+ if(local){
+  const a=Math.random()*Math.PI*2,d=180+Math.random()*PELLET_LOCAL_RADIUS;
+  return {x:clamp(c.x+Math.cos(a)*d,-WORLD/2,WORLD/2),y:clamp(c.y+Math.sin(a)*d,-WORLD/2,WORLD/2),r:rng(3,7),c:colors[Math.floor(rng(0,colors.length))]};
+ }
+ return {x:rng(-WORLD/2,WORLD/2),y:rng(-WORLD/2,WORLD/2),r:rng(3,7),c:colors[Math.floor(rng(0,colors.length))]};
+}
 function eatPellets(c){
  const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.08:c.mass<160?1.04:1, gain=(c.powerType==='FRENZY'&&c.powerT>0?2.55:1.35)*pickupBonus;
- for(let i=game.pellets.length-1;i>=0;i--){const p=game.pellets[i];if(dist2(c,p)<reach2){c.mass+=gain;game.pellets[i]={x:rng(-WORLD/2,WORLD/2),y:rng(-WORLD/2,WORLD/2),r:rng(3,7),c:colors[Math.floor(rng(0,colors.length))]};if(c===game.me){game.pelletsCollected++;updateMission('pellets',game.pelletsCollected);burst(c.x,c.y,p.c,2,95)}}}
+ for(let i=game.pellets.length-1;i>=0;i--){const p=game.pellets[i];if(dist2(c,p)<reach2){c.mass+=gain;game.pellets[i]=spawnPelletNear(c);if(c===game.me){game.pelletsCollected++;updateMission('pellets',game.pelletsCollected);burst(c.x,c.y,p.c,2,95)}}}
 }
 function collide(){
  for(let i=0;i<game.cells.length;i++){const a=game.cells[i];if(!a.alive)continue;for(let j=i+1;j<game.cells.length;j++){const b=game.cells[j];if(!b.alive)continue;const big=a.mass>=b.mass?a:b,small=big===a?b:a;const rr=radius(big.mass)*.84; if(dist2(a,b)<rr*rr && big.mass>small.mass*1.12){
