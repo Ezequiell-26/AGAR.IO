@@ -279,7 +279,7 @@ document.getElementById('splitTouch').addEventListener('pointerdown',e=>{e.preve
 play.onclick=()=>start();again.onclick=()=>start();
 
 function makeCell(x,y,mass,name,color,isBot=false,avatar='',clan=''){
- return {id:crypto.randomUUID(),x,y,mass,name,color,isBot,vx:0,vy:0,splitT:0,brain:rng(0,100),alive:true,kills:0,avatar,clan,emote:'',emoteT:0,powerType:'',powerT:0,shield:0,familyId:null,mergeAt:0,mergeCharge:0,spikeLock:0};
+ return {id:crypto.randomUUID(),x,y,mass,visualMass:mass,name,color,isBot,vx:0,vy:0,splitT:0,brain:rng(0,100),alive:true,kills:0,avatar,clan,emote:'',emoteT:0,powerType:'',powerT:0,shield:0,familyId:null,mergeAt:0,mergeCharge:0,spikeLock:0};
 }
 const POWERS={
  TURBO:{name:'Turbo',icon:'⚡',duration:4,color:'#7cf7ff'},
@@ -320,11 +320,11 @@ function start(){
  game.cells.push(game.me); menu.classList.add('hidden');death.classList.add('hidden');hud.classList.remove('hidden');paused=false;emotesEl.style.display='flex';
 }
 function speed(c){
- const balanced=480*Math.pow(25/Math.max(c.mass,25),0.13);
- const agility=c.mass<70?1.12:c.mass<160?1.07:c.mass<320?1.03:1;
- const turbo=c.powerType==='TURBO'&&c.powerT>0?1.34:1;
- const dash=c.powerType==='DASH'&&c.powerT>0?1.62:1;
- return clamp(balanced*agility*turbo*dash,145,480);
+ const balanced=420*Math.pow(25/Math.max(c.mass,25),0.13);
+ const agility=c.mass<70?1.10:c.mass<160?1.06:c.mass<320?1.02:1;
+ const turbo=c.powerType==='TURBO'&&c.powerT>0?1.30:1;
+ const dash=c.powerType==='DASH'&&c.powerT>0?1.50:1;
+ return clamp(balanced*agility*turbo*dash,105,420);
 }
 function moveCell(c,tx,ty,dt){
  const dx=tx-c.x,dy=ty-c.y, len=Math.hypot(dx,dy)||1, s=speed(c);
@@ -407,7 +407,7 @@ function refillHotZone(c){
  }
 }
 function eatPellets(c){
- const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.12:c.mass<160?1.07:1, baseGain=c.mass<100?2.2:c.mass<250?1.9:c.mass<600?1.65:1.45, gain=(c.powerType==='FRENZY'&&c.powerT>0?baseGain*1.65:baseGain)*pickupBonus;
+ const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.12:c.mass<160?1.07:1, baseGain=c.mass<100?5.5:c.mass<250?4.5:c.mass<600?3.8:3.2, gain=(c.powerType==='FRENZY'&&c.powerT>0?baseGain*1.65:baseGain)*pickupBonus;
  if(radius(c.mass)>=WORLD/2){
   if(frameCount%12!==0)return;
   const batch=Math.min(320,game.pellets.length);
@@ -431,6 +431,7 @@ function die(){finishMatch();localStats.bestMass=Math.max(localStats.bestMass,ga
 function update(dt){
  if(!game||paused||!game.me.alive)return;
  const c=game.me;
+ for(const actor of game.cells){const target=actor.mass;actor.visualMass+=(target-actor.visualMass)*Math.min(1,dt*5)}
  if(game.mode==='battle'){game.zoneRadius=Math.max(1500,WORLD/2-(performance.now()-game.startTime)/1000*9);for(const actor of game.cells){const d=Math.hypot(actor.x,actor.y);if(d>game.zoneRadius){actor.mass=Math.max(6,actor.mass-dt*(4+(d-game.zoneRadius)*0.01));}}}
  for(let i=game.particles.length-1;i>=0;i--){const p=game.particles[i];p.life-=dt;if(p.life<=0){game.particles.splice(i,1);continue}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.pow(.02,dt);p.vy*=Math.pow(.02,dt)}
  if(c.powerT>0){c.powerT=Math.max(0,c.powerT-dt);if(c.powerT===0){c.powerType='';c.shield=0}}
@@ -480,7 +481,7 @@ function draw(){
  ctx.globalAlpha=1;for(const p of game.ejected||[]){const s=worldToScreen(p.x,p.y);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(s.x,s.y,p.r*z,0,Math.PI*2);ctx.fill()}
  ctx.globalCompositeOperation='source-over';
  const sorted=game.cells.slice().sort((a,b)=>a.mass-b.mass);
- for(const c of sorted){const s=worldToScreen(c.x,c.y),r=radius(c.mass)*z,drawR=Math.min(r,Math.max(W,H)*1.35);if(s.x<-drawR||s.x>W+drawR||s.y<-drawR||s.y>H+drawR)continue;
+ for(const c of sorted){const s=worldToScreen(c.x,c.y),r=radius(c.visualMass??c.mass)*z,drawR=Math.min(r,Math.max(W,H)*1.35);if(s.x<-drawR||s.x>W+drawR||s.y<-drawR||s.y>H+drawR)continue;
   if(r>Math.max(W,H)){ctx.fillStyle=c.color;ctx.beginPath();ctx.arc(s.x,s.y,drawR,0,Math.PI*2);ctx.fill()}else{const g=ctx.createRadialGradient(s.x-drawR*.35,s.y-drawR*.35,Math.max(1,drawR*.12),s.x,s.y,Math.max(1,drawR));g.addColorStop(0,'#fff');g.addColorStop(.18,c.color);g.addColorStop(1,'#09101f');ctx.fillStyle=g;ctx.shadowColor=c.color;ctx.shadowBlur=Math.min(28,18*z);ctx.beginPath();ctx.arc(s.x,s.y,drawR,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
   ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=Math.max(1,1.5*z);ctx.stroke();
   if(c===game.me&&c.powerType&&POWERS[c.powerType]){const meta=POWERS[c.powerType];ctx.strokeStyle=meta.color;ctx.globalAlpha=.52;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(s.x,s.y,drawR+5+Math.sin(frameCount*.12)*2,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
@@ -497,4 +498,3 @@ function draw(){
 const mini=document.getElementById('mini'),miniCtx=mini.getContext('2d',{alpha:false});
 function drawMini(){
  miniCtx.clearRect(0,0,300,300);miniCtx.fillStyle='#08101d';miniCtx.fillRect(0,0,300,300);
- for(let i=0;i<game.pellets.length;i+=10){const p=game.pellets[i],x=(p.x/WORLD+0.5)*300,y=(p.y/WORLD+0.5)*300;miniCtx.fillStyle=p.c;miniCtx.fillRect(x,y,1.8,1.8)}
