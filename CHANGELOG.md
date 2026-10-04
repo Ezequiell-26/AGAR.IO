@@ -20,3 +20,11 @@
 - Touching a spike with 60+ mass splits the player into two fragments, costs 10% of pre-hit mass, and starts a delayed gradual reunification.
 - Added spike markers to the minimap.
 - Removed the practical camera zoom floor so very large cells remain playable as mass grows without a cap.
+
+
+## 2026-10-05 — Control de fragmentos
+- W ahora divide al jugador en dos fragmentos realmente controlables con el mismo mouse.
+- Ambos fragmentos conservan la condición de jugador, recogen masa y aparecen correctamente en el minimapa.
+- Después de la separación, los fragmentos se atraen y vuelven a fusionarse automáticamente en una sola célula conservando la masa total del split.
+- La muerte solo termina la partida cuando ya no queda ningún fragmento del jugador.
+- Se añadió una prueba E2E específica para split, control simultáneo y fusión.
