@@ -299,7 +299,7 @@ function spawnSpikes(){
  game.spikes=[];
  for(let i=0;i<SPIKES;i++){
   let x=0,y=0,tries=0;
-  do{x=rng(-WORLD/2+250,WORLD/2-250);y=rng(-WORLD/2+250,WORLD/2-250);tries++}while(tries<30&&game.spikes.some(s=>((s.x-x)*(s.x-x)+(s.y-y)*(s.y-y))<620*620));
+  do{x=rng(-WORLD/2+250,WORLD/2-250);y=rng(-WORLD/2+250,WORLD/2-250);tries++}while(tries<60&&(((game.me.x-x)*(game.me.x-x)+(game.me.y-y)*(game.me.y-y))<900*900||game.spikes.some(s=>((s.x-x)*(s.x-x)+(s.y-y)*(s.y-y))<620*620)));
   game.spikes.push({x,y,r:SPIKE_RADIUS,rot:Math.random()*Math.PI*2,pulse:Math.random()*Math.PI*2});
  }
 }
