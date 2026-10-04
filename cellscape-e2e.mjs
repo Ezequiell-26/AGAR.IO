@@ -1,0 +1,35 @@
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function main(){
+  const tabs=await (await fetch('http://127.0.0.1:9223/json')).json();
+  const page=tabs.find(t=>t.type==='page'&&t.url.includes('127.0.0.1:4173'));
+  if(!page)throw new Error('NO_PAGE');
+  const ws=new WebSocket(page.webSocketDebuggerUrl);
+  await new Promise((res,rej)=>{ws.onopen=res;ws.onerror=rej});
+  let id=0;const pending=new Map();
+  ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id&&pending.has(m.id)){pending.get(m.id)(m);pending.delete(m.id)}};
+  const cdp=(method,params={})=>new Promise((resolve,reject)=>{const i=++id;pending.set(i,m=>m.error?reject(new Error(JSON.stringify(m.error))):resolve(m));ws.send(JSON.stringify({id:i,method,params}))});
+  const ev=async expression=>{const r=await cdp('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});return r.result.result.value};
+  await ev("localStorage.clear(); location.reload(); true");
+  await sleep(900);
+  const base=await ev("({title:document.title,menu:!document.querySelector('#menu').classList.contains('hidden'),login:!!document.querySelector('#loginOpen'),modes:document.querySelectorAll('.mode-btn').length,party:!!document.querySelector('#partyOpen')})");
+  if(!base.menu||!base.login||base.modes!==4||!base.party)throw new Error('LOBBY_CHECK_FAILED '+JSON.stringify(base));
+  await ev("document.querySelector('#loginOpen').click(); true");
+  const login=await ev("({visible:!document.querySelector('#appModal').classList.contains('hidden'),title:document.querySelector('#modalTitle').textContent,hasEmail:!!document.querySelector('#loginEmail')})");
+  if(!login.visible||!login.hasEmail)throw new Error('LOGIN_CHECK_FAILED '+JSON.stringify(login));
+  await ev("document.querySelector('#modalClose').click(); document.querySelector('[data-mode=\"battle\"]').click(); true");
+  const mode=await ev("({active:document.querySelector('.mode-btn.active').dataset.mode,hint:document.querySelector('#modeHint').textContent})");
+  if(mode.active!=='battle')throw new Error('MODE_CHECK_FAILED '+JSON.stringify(mode));
+  await ev("document.querySelector('#partyOpen').click(); true");
+  const party=await ev("({visible:!document.querySelector('#appModal').classList.contains('hidden'),title:document.querySelector('#modalTitle').textContent,create:!!document.querySelector('#partyModalCreate')})");
+  if(!party.visible||!party.create)throw new Error('PARTY_CHECK_FAILED '+JSON.stringify(party));
+  await ev("document.querySelector('#partyModalCreate').click(); true");
+  const partyCode=await ev("({code:(document.querySelector('#partyCode')||{}).textContent||'',len:(document.querySelector('#partyCode')||{}).textContent?.length||0})");
+  if(partyCode.len!==6)throw new Error('PARTY_CODE_FAILED '+JSON.stringify(partyCode));
+  await ev("document.querySelector('#modalClose').click(); document.querySelector('#play').click(); true");
+  await sleep(1200);
+  const game=await ev("({menu:document.querySelector('#menu').classList.contains('hidden'),hud:!document.querySelector('#hud').classList.contains('hidden'),canvas:document.querySelector('#game').width>0,status:document.querySelector('#status').textContent})");
+  if(!game.menu||!game.hud||!game.canvas)throw new Error('GAME_CHECK_FAILED '+JSON.stringify(game));
+  console.log('E2E_OK',JSON.stringify({base,login,mode,party,partyCode,game}));
+  ws.close();
+}
+main().catch(e=>{console.error('E2E_FAIL',e.stack||e);process.exitCode=1});
