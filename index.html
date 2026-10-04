@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>CellScape Arena</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eef3ff;background:#060912}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060912}
+body{background:radial-gradient(circle at 50% 30%,#101b33 0,#060912 52%,#03050a 100%)}
+button,input{font:inherit}.hidden{display:none!important}
+#menu{position:fixed;inset:0;display:grid;place-items:center;z-index:20;background:linear-gradient(180deg,rgba(5,8,16,.74),rgba(2,4,9,.94));backdrop-filter:blur(10px)}
+.panel{width:min(520px,92vw);padding:34px;border:1px solid rgba(140,190,255,.18);border-radius:24px;background:rgba(12,18,31,.84);box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.logo{font-size:42px;font-weight:900;letter-spacing:-2px;margin:0 0 8px;background:linear-gradient(120deg,#8bf6ff,#7c7cff,#ff8be6);-webkit-background-clip:text;color:transparent}
+.sub{color:#93a2be;margin-bottom:26px}.row{display:flex;gap:12px}.field{flex:1}
+input{width:100%;padding:14px 16px;color:#f4f7ff;background:#0a1120;border:1px solid #23324d;border-radius:12px;outline:none}
+input:focus{border-color:#6f8dff;box-shadow:0 0 0 3px rgba(111,141,255,.12)}
+.primary{width:100%;margin-top:14px;padding:15px 18px;border:0;border-radius:14px;color:#031016;background:linear-gradient(135deg,#7cf7ff,#8a8cff);font-weight:800;cursor:pointer}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.meta div{padding:12px;background:#0a1020;border:1px solid #1e2a42;border-radius:12px;text-align:center}.meta b{display:block;font-size:14px}.meta span{display:block;color:#7f8ca5;font-size:11px;margin-top:4px}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5}.card{position:absolute;background:rgba(7,12,22,.74);border:1px solid rgba(128,160,220,.17);box-shadow:0 10px 30px rgba(0,0,0,.25);backdrop-filter:blur(8px);border-radius:16px}
+#stats{left:16px;top:16px;padding:12px 14px;min-width:174px}.statline{display:flex;justify-content:space-between;gap:18px;color:#91a2be;font-size:12px}.statline b{color:#f2f6ff}.mass{font-size:26px;font-weight:900;color:#fff;margin-bottom:3px}
+#board{right:16px;top:16px;width:210px;padding:14px}.boardtitle{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:#8595b5;margin-bottom:9px}.entry{display:flex;gap:8px;align-items:center;font-size:12px;padding:6px 0}.entry .n{width:18px;color:#647391}.entry .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.entry .v{color:#cdd7ee;font-variant-numeric:tabular-nums}
+#help{left:16px;bottom:16px;padding:10px 12px;color:#71809d;font-size:11px}
+#status{right:16px;bottom:16px;padding:10px 12px;color:#71809d;font-size:11px}
+#powerHud{left:16px;top:188px;min-width:174px;padding:10px 12px}.power-title{font-size:9px;letter-spacing:1px;color:#71809d;font-weight:900}.power-main{display:flex;align-items:center;gap:8px;margin-top:5px}.power-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:#0d1728;border:1px solid rgba(124,247,255,.18);font-weight:900}.power-name{font-size:11px;font-weight:900;color:#eaf1ff}.power-time{font-size:10px;color:#7cf7ff;margin-left:auto}.power-bar{height:4px;border-radius:999px;background:#162136;margin-top:7px;overflow:hidden}.power-bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,#69a7ff,#7cf7ff);border-radius:999px}
+.power-orb{font-weight:900}
+#mini{position:absolute;inset:auto;left:16px;bottom:62px;width:150px;height:150px;border-radius:14px;border:1px solid rgba(128,160,220,.2);background:#08101d;box-shadow:0 12px 34px rgba(0,0,0,.28);backdrop-filter:blur(8px);image-rendering:auto}
+#death{position:fixed;inset:0;display:grid;place-items:center;z-index:15;background:rgba(1,3,8,.56);backdrop-filter:blur(8px)}#death .panel{width:min(390px,90vw);text-align:center}.score{font-size:52px;font-weight:900;margin:8px 0;color:#fff}.small{color:#8391aa}
+#touch{position:fixed;inset:0;z-index:8;pointer-events:none}.stick{position:absolute;left:22px;bottom:28px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(22,31,52,.32)}.stick:after{content:"";position:absolute;width:54px;height:54px;left:33px;top:33px;border-radius:50%;background:rgba(121,154,255,.42);box-shadow:0 0 30px rgba(121,154,255,.3)}.touchbtn{position:absolute;right:24px;bottom:46px;width:86px;height:86px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,113,177,.28);color:#fff;font-weight:800;display:grid;place-items:center}
+.profilebox{margin-top:18px;padding:14px;background:rgba(5,10,20,.65);border:1px solid #1d2b45;border-radius:16px}.profilehead{display:flex;gap:12px;align-items:center;margin-bottom:12px}.avatarPreview{width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid #7388ff;background:#111a2e;box-shadow:0 0 24px rgba(115,136,255,.25)}.profilegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profilegrid label{display:block;font-size:10px;color:#74839f;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}.colorInput{height:47px;padding:5px}.upload{display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border-radius:10px;background:#101a2c;border:1px solid #2b3c5d;color:#dce6ff;font-size:12px;cursor:pointer}.upload input{display:none}.profilehint{font-size:10px;color:#65738d;margin-top:9px}.emotes{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:7px;padding:8px 10px;pointer-events:auto}.emotes button{width:38px;height:38px;border:1px solid rgba(150,180,235,.16);border-radius:12px;background:rgba(7,12,22,.72);color:#fff;font-size:20px;cursor:pointer;backdrop-filter:blur(8px)}.emotes button:hover{transform:translateY(-2px);border-color:rgba(124,247,255,.4)}.bubble{position:absolute;transform:translate(-50%,-100%);padding:5px 9px;border-radius:11px;background:rgba(6,10,20,.82);border:1px solid rgba(255,255,255,.13);font-size:22px;pointer-events:none;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+@media (pointer:fine){#touch{display:none}}
+@media (max-width:700px){.profilegrid{grid-template-columns:1fr}.emotes{bottom:8px}.emotes button{width:34px;height:34px;font-size:18px}}
+@media (max-width:700px){#board{width:180px}.logo{font-size:36px}.menu-grid{grid-template-columns:1fr}.feature-panel{display:none}.menu-shell{padding:14px}.menu-top{align-items:flex-start}.live-pill{display:none}.account-copy{display:none}.account-bar{padding:7px}.play-panel{padding:22px}.hero-title{font-size:30px}.mode-grid{grid-template-columns:1fr 1fr}.menu-links{grid-template-columns:repeat(3,1fr)}.menu-footer{display:none}}
+.menu-shell{width:min(1180px,94vw);max-height:94vh;overflow:auto;padding:22px}.menu-top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:18px}.brand-wrap{display:flex;align-items:center;gap:14px}.brand-sub{font-size:10px;letter-spacing:1.8px;color:#647391}.live-pill{border:1px solid rgba(124,247,255,.18);border-radius:999px;padding:7px 10px;font-size:10px;letter-spacing:.8px;color:#85e9ed}.live-pill i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#63e6be;box-shadow:0 0 12px #63e6be;margin-right:6px}.account-bar{display:flex;align-items:center;gap:9px;padding:7px 8px 7px 7px;border:1px solid rgba(128,160,220,.16);border-radius:14px;background:rgba(7,12,22,.68)}.account-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#10182a;border:1px solid #334664}.account-copy{display:grid;min-width:105px}.account-copy b{font-size:12px}.account-copy span{font-size:10px;color:#71809d;margin-top:2px}.account-btn,.secondary,.menu-links button,.mini-btn{border:1px solid rgba(128,160,220,.2);border-radius:11px;background:#0e1728;color:#dce6ff;padding:10px 12px;font-weight:800;cursor:pointer}.account-btn{font-size:10px;letter-spacing:.5px}.menu-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.8fr);gap:18px}.play-panel,.feature-panel{background:linear-gradient(180deg,rgba(15,23,40,.9),rgba(8,13,25,.88));border-color:rgba(140,190,255,.16)}.play-panel{width:auto;padding:28px}.feature-panel{width:auto;padding:24px}.eyebrow{font-size:10px;letter-spacing:1.5px;color:#7184aa;font-weight:900}.hero-title{font-size:38px;letter-spacing:-1.5px;margin:8px 0 7px;font-weight:950}.hero-title span{color:#7cf7ff}.input-label{display:block;font-size:10px;letter-spacing:1px;color:#71809d;margin:0 0 5px;font-weight:900}.profile-copy{display:grid;flex:1}.profile-copy b{font-size:13px}.profile-copy span{font-size:10px;color:#72819e;margin-top:4px}.mode-header{display:flex;justify-content:space-between;align-items:center;margin-top:20px;margin-bottom:9px;font-size:10px;letter-spacing:1px;color:#7a89a7;font-weight:900}.mode-header b{font-size:10px;color:#b5c4df;letter-spacing:0}.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.mode-btn{padding:12px 9px;text-align:left;border:1px solid rgba(128,160,220,.16);border-radius:12px;background:#0a1120;color:#fff;cursor:pointer}.mode-btn strong,.mode-btn small{display:block}.mode-btn strong{font-size:11px}.mode-btn small{font-size:9px;color:#687995;margin-top:3px}.mode-btn.active{border-color:rgba(124,247,255,.55);background:linear-gradient(180deg,rgba(45,77,111,.5),rgba(11,20,37,.9));box-shadow:0 0 0 1px rgba(124,247,255,.07) inset}.play-actions{display:grid;grid-template-columns:1fr 130px;gap:10px;margin-top:12px}.play-actions .primary{margin-top:0}.secondary{font-size:12px}.secondary span{color:#7cf7ff}.menu-links{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:14px}.menu-links button{font-size:9px;padding:10px 6px;color:#8d9cba}.feature-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.feature-head h3{margin:5px 0 0;font-size:18px}.level-badge{padding:7px 9px;border-radius:10px;background:#121d31;color:#85e9ed;border:1px solid rgba(124,247,255,.17);font-size:10px;font-weight:900}.resource-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}.resource{padding:12px;border-radius:12px;background:#0a1120;border:1px solid #1b2942}.resource span,.resource small{display:block;font-size:9px;color:#6e7d98;letter-spacing:.8px}.resource b{display:block;font-size:18px;margin:4px 0}.resource em{font-style:normal}.resource.wide{grid-column:1/-1}.xpbar{height:6px;border-radius:999px;background:#182338;margin-top:7px;overflow:hidden}.xpbar i{display:block;width:18%;height:100%;background:linear-gradient(90deg,#69a7ff,#7cf7ff);border-radius:999px}.feature-card{padding:14px;border:1px solid #1b2942;border-radius:14px;background:rgba(6,11,21,.65);margin-top:10px}.feature-card-head{display:flex;justify-content:space-between;gap:10px}.feature-card-head b{font-size:12px}.feature-card-head span{font-size:9px;color:#647391}.feature-card p{font-size:10px;line-height:1.5;color:#7c8aa4}.feature-actions{display:flex;gap:7px}.mini-btn{font-size:9px}.mini-btn.ghost{background:transparent}.news-item{display:flex;gap:9px;padding:9px 0;border-top:1px solid rgba(128,160,220,.09)}.news-item:first-of-type{margin-top:8px}.news-item>span{font-size:10px;color:#6f81a6}.news-item div{display:grid}.news-item b{font-size:10px}.news-item small{font-size:9px;color:#647391;margin-top:2px}.feature-footer{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(128,160,220,.1);font-size:9px;color:#647391}.feature-footer b{text-align:right;color:#9aabc7}.menu-footer{display:flex;align-items:center;gap:16px;padding:14px 2px 0;color:#5f6f8d;font-size:9px}.menu-footer button{border:0;background:none;color:#7382a0;font-size:9px;cursor:pointer;padding:0}.footer-right{margin-left:auto}.app-modal{position:fixed}.modal-card{width:min(520px,92vw);max-height:82vh;overflow:auto;padding:22px;border:1px solid rgba(140,190,255,.2);border-radius:20px;background:rgba(9,15,28,.97);box-shadow:0 28px 90px rgba(0,0,0,.55);backdrop-filter:blur(14px)}#appModal{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(1,3,8,.72);backdrop-filter:blur(7px)}.modal-top{display:flex;align-items:flex-start;justify-content:space-between}.modal-top h2{margin:5px 0 0;font-size:24px}.modal-close{width:34px;height:34px;border-radius:10px;border:1px solid #2a3854;background:#0d1627;color:#fff;font-size:23px;cursor:pointer}.modal-section{margin-top:16px;padding:14px;border:1px solid #1c2941;border-radius:13px;background:#080f1d}.modal-section h4{margin:0 0 8px;font-size:12px}.modal-section p,.modal-note{font-size:10px;line-height:1.5;color:#75839d}.modal-form{display:grid;gap:10px}.modal-form label{font-size:10px;color:#71809d}.modal-form input{margin-top:5px}.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modal-full{width:100%;margin-top:10px}.login-provider{display:grid;grid-template-columns:1fr 1fr;gap:8px}.login-provider button{padding:12px;border:1px solid #24344f;background:#0d1728;color:#e6edff;border-radius:11px;font-weight:800;cursor:pointer}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tabs button{border:1px solid #24344f;background:#0d1728;color:#8c9ab3;padding:9px 11px;border-radius:10px;cursor:pointer}.catalog{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.catalog-item{padding:12px;border-radius:12px;border:1px solid #1e2c46;background:#0b1322}.skin-preview{height:62px;border-radius:50%;width:62px;margin:auto auto 8px;display:grid;place-items:center;font-weight:900;font-size:11px;color:#fff}.catalog-item b,.catalog-item small{display:block;text-align:center}.catalog-item small{font-size:9px;color:#667797;margin-top:3px}.toggle{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(128,160,220,.08);font-size:10px}.toggle:last-child{border-bottom:0}.toggle input{width:38px;accent-color:#7cf7ff}.party-code{font-size:30px;letter-spacing:8px;text-align:center;padding:13px;margin:12px 0;border:1px dashed #2a3b5a;border-radius:12px;color:#7cf7ff;background:#07101d;font-weight:900}.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat-card{padding:13px;border-radius:12px;border:1px solid #1c2a42;background:#0a1120}.stat-card span,.stat-card small{display:block;color:#697998;font-size:9px}.stat-card b{display:block;font-size:20px;margin-top:4px}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="menu">
+ <div class="menu-shell">
+  <div class="menu-top">
+   <div class="brand-wrap">
+    <div><div class="logo">CellScape</div><div class="brand-sub">CELL EAT CELL · ARENA ONLINE</div></div>
+    <span class="live-pill"><i></i> SERVIDORES ACTIVOS</span>
+   </div>
+   <div class="account-bar">
+    <img id="accountAvatar" class="account-avatar" alt="Avatar">
+    <div class="account-copy"><b id="accountName">Invitado</b><span id="accountStatus">Progreso local</span></div>
+    <button id="loginOpen" class="account-btn">INICIAR SESIÓN</button>
+   </div>
+  </div>
+
+  <div class="menu-grid">
+   <section class="panel play-panel">
+    <div class="eyebrow">JUEGO RÁPIDO</div>
+    <h2 class="hero-title">Conviértete en la célula <span>#1</span></h2>
+    <div class="sub">Absorbe masa, crece, divide y domina la arena. Tu identidad viaja contigo.</div>
+
+    <div class="row">
+     <div class="field"><label class="input-label" for="nick">NOMBRE</label><input id="nick" maxlength="16" value="Jugador" placeholder="Tu nombre"></div>
+    </div>
+
+    <div class="profilebox">
+     <div class="profilehead">
+      <img id="avatarPreview" class="avatarPreview" alt="Avatar">
+      <div class="profile-copy"><b>Tu identidad</b><span>Foto, clan y color se guardan en este dispositivo.</span></div>
+      <label class="upload">CAMBIAR FOTO<input id="avatarFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+     </div>
+     <div class="profilegrid">
+      <div><label for="clan">CLAN / TAG</label><input id="clan" maxlength="8" placeholder="CLAN"></div>
+      <div><label for="color">COLOR</label><input id="color" class="colorInput" type="color" value="#69a7ff"></div>
+     </div>
+    </div>
+
+    <div class="mode-header"><span>MODO DE JUEGO</span><b id="modeHint">FFA · todos contra todos</b></div>
+    <div class="mode-grid">
+     <button class="mode-btn active" data-mode="ffa"><strong>FFA</strong><small>Clásico</small></button>
+     <button class="mode-btn" data-mode="teams"><strong>EQUIPOS</strong><small>3 colores</small></button>
+     <button class="mode-btn" data-mode="battle"><strong>BATTLE ROYALE</strong><small>Zona móvil</small></button>
+     <button class="mode-btn" data-mode="experimental"><strong>EXPERIMENTAL</strong><small>Novedades</small></button>
+    </div>
+
+    <div class="play-actions">
+     <button id="play" class="primary">JUGAR AHORA</button>
+     <button id="partyOpen" class="secondary">PARTY <span>+</span></button>
+    </div>
+
+    <div class="menu-links">
+     <button id="profileOpen">PERFIL</button>
+     <button id="skinsOpen">SKINS</button>
+     <button id="shopOpen">TIENDA</button>
+     <button id="settingsOpen">AJUSTES</button>
+     <button id="statsOpen">ESTADÍSTICAS</button>
+    </div>
+   </section>
+
+   <aside class="panel feature-panel">
+    <div class="feature-head"><div><div class="eyebrow">TU CUENTA</div><h3 id="featureTitle">Progreso del jugador</h3></div><span class="level-badge">LVL 1</span></div>
+    <div class="resource-grid">
+     <div class="resource"><span>DNA</span><b id="dnaValue">0</b><small>moneda</small></div>
+     <div class="resource"><span>MONEDAS</span><b id="coinValue">0</b><small>moneda</small></div>
+     <div class="resource wide"><span>XP · NIVEL 1</span><b><em id="xpValue">0</em> / 100</b><div class="xpbar"><i id="xpBar"></i></div></div>
+    </div>
+
+    <div class="feature-card">
+     <div class="feature-card-head"><b>PARTY</b><span>JUEGA CON AMIGOS</span></div>
+     <p>Crea una sala privada o entra con un código de 6 caracteres.</p>
+     <div class="feature-actions"><button id="partyCreate" class="mini-btn">CREAR SALA</button><button id="partyJoin" class="mini-btn ghost">UNIRSE</button></div>
+    </div>
+
+    <div class="feature-card">
+     <div class="feature-card-head"><b>LO ÚLTIMO</b><span>CELLSCAPE</span></div>
+     <div class="news-item"><span>01</span><div><b>Perfil personalizado</b><small>Avatar + clan + color + emotes.</small></div></div>
+     <div class="news-item"><span>02</span><div><b>Modos de juego</b><small>FFA, Equipos, Battle Royale y Experimental.</small></div></div>
+     <div class="news-item"><span>03</span><div><b>Temporada 1</b><small>Skins y recompensas en preparación.</small></div></div>
+    </div>
+
+    <div class="feature-footer"><span>Servidor</span><b>LOCAL / DEV</b><span>Ping</span><b>-- ms</b></div>
+   </aside>
+  </div>
+
+  <div class="menu-footer">
+   <span>CellScape Arena</span><button id="howToOpen">CÓMO JUGAR</button><button id="newsOpen">NOTICIAS</button><button id="privacyOpen">PRIVACIDAD</button>
+   <span class="footer-right">v0.2 · prototipo jugable</span>
+  </div>
+ </div>
+</div>
+<div id="appModal" class="hidden">
+ <div class="modal-card">
+  <div class="modal-top"><div><div id="modalKicker" class="eyebrow">CELLSCAPE</div><h2 id="modalTitle">Panel</h2></div><button id="modalClose" class="modal-close">×</button></div>
+  <div id="modalBody"></div>
+ </div>
+</div>
+<div id="hud" class="hidden">
+ <div id="stats" class="card"><div class="mass" id="mass">25</div><div class="statline"><span>Masa</span><b id="score">0</b></div><div class="statline"><span>Posición</span><b id="pos">0, 0</b></div><div class="statline"><span>FPS</span><b id="fps">60</b></div></div>
+ <div id="powerHud" class="card"><div class="power-title">PODER ACTIVO</div><div class="power-main"><div id="powerIcon" class="power-icon">—</div><div id="powerName" class="power-name">Sin poder</div><div id="powerTime" class="power-time"></div></div><div class="power-bar"><i id="powerBar"></i></div></div>
+ <div id="board" class="card"><div class="boardtitle">TOP 8</div><div id="leaders"></div></div>
+ <canvas id="mini" width="300" height="300" aria-label="Minimapa"></canvas>
+ <div id="help" class="card">Mouse/touch · W dividir · E expulsar · 1-6 emotes · poderes automáticos · P pausa</div>
+ <div id="status" class="card">Modo local · Bots activos</div>
+ <div id="emotes" class="emotes"></div>
+</div>
+<div id="death" class="hidden"><div class="panel"><div class="small">HAS SIDO ABSORBIDO</div><div class="score" id="deathscore">0</div><div class="small">Masa final</div><button id="again" class="primary">VOLVER A JUGAR</button></div></div>
+<div id="touch"><div class="stick"></div><div class="touchbtn" id="splitTouch">DIVIDIR</div></div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const menu=document.getElementById('menu'),hud=document.getElementById('hud'),death=document.getElementById('death');
+const nickEl=document.getElementById('nick'), play=document.getElementById('play'), again=document.getElementById('again');
+const clanEl=document.getElementById('clan'),colorEl=document.getElementById('color'),avatarPreview=document.getElementById('avatarPreview'),avatarFile=document.getElementById('avatarFile'),emotesEl=document.getElementById('emotes');
+const massEl=document.getElementById('mass'),scoreEl=document.getElementById('score'),posEl=document.getElementById('pos'),fpsEl=document.getElementById('fps'),leadersEl=document.getElementById('leaders');
+const appModal=document.getElementById('appModal'),modalTitle=document.getElementById('modalTitle'),modalKicker=document.getElementById('modalKicker'),modalBody=document.getElementById('modalBody'),modalClose=document.getElementById('modalClose');
+const accountAvatar=document.getElementById('accountAvatar'),accountName=document.getElementById('accountName'),accountStatus=document.getElementById('accountStatus'),loginOpen=document.getElementById('loginOpen'),modeHint=document.getElementById('modeHint');
+const dnaValue=document.getElementById('dnaValue'),coinValue=document.getElementById('coinValue'),xpValue=document.getElementById('xpValue'),xpBar=document.getElementById('xpBar');
+const powerIcon=document.getElementById('powerIcon'),powerName=document.getElementById('powerName'),powerTime=document.getElementById('powerTime'),powerBar=document.getElementById('powerBar');
+const EMOTES=['😂','🔥','GG','💀','👑','❤️'];
+const avatarCache=new Map();
+let profile={name:'Jugador',clan:'',color:'#69a7ff',avatar:''};
+function getAvatar(src){if(!src)return null;let im=avatarCache.get(src);if(im)return im;im=new Image();im.src=src;avatarCache.set(src,im);return im}
+try{profile=Object.assign(profile,JSON.parse(localStorage.getItem('cellscape-profile')||'{}'))}catch{}
+nickEl.value=profile.name;clanEl.value=profile.clan;colorEl.value=profile.color;
+if(profile.avatar)avatarPreview.src=profile.avatar; else avatarPreview.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="116" height="116"><rect width="116" height="116" rx="58" fill="#111a2e"/><text x="58" y="70" text-anchor="middle" font-size="52" fill="#7cf7ff">●</text></svg>');
+function saveProfile(){profile={name:(nickEl.value.trim()||'Jugador').slice(0,16),clan:(clanEl.value.trim()||'').slice(0,8).toUpperCase(),color:colorEl.value||'#69a7ff',avatar:profile.avatar||''};localStorage.setItem('cellscape-profile',JSON.stringify(profile))}
+avatarFile.addEventListener('change',()=>{const f=avatarFile.files&&avatarFile.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{profile.avatar=String(reader.result);avatarPreview.src=profile.avatar;saveProfile()};reader.readAsDataURL(f)});
+[nickEl,clanEl,colorEl].forEach(el=>el.addEventListener('input',()=>saveProfile()));
+EMOTES.forEach((e,i)=>{const b=document.createElement('button');b.textContent=e;b.title='Emote '+(i+1);b.addEventListener('click',()=>emitEmote(e));emotesEl.appendChild(b)});
+const modeNames={ffa:'FFA · todos contra todos',teams:'Equipos · 3 colores',battle:'Battle Royale · zona móvil',experimental:'Experimental · novedades'};
+let selectedMode=localStorage.getItem('cellscape-mode')||'ffa';
+let settings={grid:true,names:true,mass:true,sound:false};
+let account={email:'',name:'',loggedIn:false};
+let localStats={games:0,bestMass:0,highestScore:0,kills:0};
+try{settings=Object.assign(settings,JSON.parse(localStorage.getItem('cellscape-settings')||'{}'));account=Object.assign(account,JSON.parse(localStorage.getItem('cellscape-account')||'{}'));localStats=Object.assign(localStats,JSON.parse(localStorage.getItem('cellscape-stats')||'{}'))}catch{}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function syncMenu(){accountName.textContent=account.loggedIn?(account.name||profile.name):profile.name||'Invitado';accountStatus.textContent=account.loggedIn?account.email:'Progreso local';loginOpen.textContent=account.loggedIn?'CERRAR SESIÓN':'INICIAR SESIÓN';accountAvatar.src=profile.avatar||avatarPreview.src;modeHint.textContent=modeNames[selectedMode]||modeNames.ffa;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===selectedMode));const wallet=JSON.parse(localStorage.getItem('cellscape-wallet')||'{}');dnaValue.textContent=wallet.dna??0;coinValue.textContent=wallet.coins??0;const xp=Math.min(100,(localStats.games*8)+Math.min(60,Math.floor(localStats.bestMass/10)));xpValue.textContent=xp;xpBar.style.width=xp+'%'}
+function persistStats(){localStorage.setItem('cellscape-stats',JSON.stringify(localStats))}
+function saveSettings(){localStorage.setItem('cellscape-settings',JSON.stringify(settings))}
+function openModal(title,kicker,html){modalTitle.textContent=title;modalKicker.textContent=kicker||'CELLSCAPE';modalBody.innerHTML=html;appModal.classList.remove('hidden')}
+function closeModal(){appModal.classList.add('hidden');modalBody.innerHTML=''}
+function showLogin(){
+ let html;
+ if(account.loggedIn){
+  html='<div class="modal-section"><h4>Cuenta local activa</h4><p>Sesión guardada en este dispositivo como <b>'+esc(account.email)+'</b>.</p><button id="modalLogout" class="primary modal-full">CERRAR SESIÓN</button></div><div class="modal-note">OAuth real se conectará cuando esté listo el backend multiplayer.</div>';
+ }else{
+  html='<div class="modal-section"><div class="modal-form"><label>CORREO<input id="loginEmail" type="email" autocomplete="email" placeholder="tu@email.com" required></label><label>CONTRASEÑA<input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required></label><button id="localLogin" class="primary modal-full">ENTRAR</button></div></div><div class="login-provider"><button data-provider="Google">CONTINUAR CON GOOGLE</button><button data-provider="Discord">CONTINUAR CON DISCORD</button></div><p class="modal-note">Modo local: la contraseña no se almacena. Los proveedores externos quedan preparados para el servidor.</p>';
+ }
+ openModal(account.loggedIn?'Cuenta conectada':'Iniciar sesión','CUENTA CELLSCAPE',html);
+ const f=document.getElementById('localLogin');
+ if(f)f.onclick=()=>{const email=document.getElementById('loginEmail').value.trim();if(!email)return;account={email,name:profile.name||'Jugador',loggedIn:true};localStorage.setItem('cellscape-account',JSON.stringify(account));syncMenu();closeModal()};
+ const lo=document.getElementById('modalLogout');
+ if(lo)lo.onclick=()=>{account={email:'',name:'',loggedIn:false};localStorage.removeItem('cellscape-account');syncMenu();closeModal()};
+ document.querySelectorAll('[data-provider]').forEach(b=>b.onclick=()=>{b.textContent='OAUTH · PRÓXIMAMENTE';b.disabled=true});
+}
+function showParty(kind='choice'){
+ if(kind==='create'){const code=Math.random().toString(36).slice(2,8).toUpperCase();localStorage.setItem('cellscape-party',code);openModal('Sala privada','PARTY','<div class="modal-section"><h4>Comparte este código</h4><div class="party-code" id="partyCode">'+code+'</div><button id="copyParty" class="primary modal-full">COPIAR CÓDIGO</button><p class="modal-note">Sala preparada para matchmaking; todavía funciona en modo local.</p></div>');document.getElementById('copyParty').onclick=async()=>{try{await navigator.clipboard.writeText(code);document.getElementById('copyParty').textContent='CÓDIGO COPIADO'}catch{document.getElementById('copyParty').textContent='CÓDIGO: '+code}};return}
+ if(kind==='join'){openModal('Unirse a Party','PARTY','<div class="modal-section"><div class="modal-form"><label>CÓDIGO DE SALA<input id="joinCode" maxlength="6" placeholder="ABC123"></label><button id="joinConfirm" class="primary modal-full">UNIRME</button></div></div>');document.getElementById('joinConfirm').onclick=()=>{const code=document.getElementById('joinCode').value.trim().toUpperCase();if(code.length!==6)return;localStorage.setItem('cellscape-party',code);document.getElementById('joinConfirm').textContent='SALA '+code+' · LISTO'};return}
+ openModal('Party','JUEGA CON AMIGOS','<div class="modal-row"><button id="partyModalCreate" class="primary">CREAR SALA</button><button id="partyModalJoin" class="secondary">UNIRSE</button></div><div class="modal-section"><h4>Cómo funciona</h4><p>Crea un código de 6 caracteres o entra a una sala de un amigo.</p></div>');
+ document.getElementById('partyModalCreate').onclick=()=>showParty('create');document.getElementById('partyModalJoin').onclick=()=>showParty('join');
+}
+function showProfile(){openModal('Perfil del jugador','IDENTIDAD','<div class="profilehead"><img class="avatarPreview" src="'+esc(profile.avatar||avatarPreview.src)+'" alt="Avatar"><div class="profile-copy"><b>'+esc(profile.name||'Jugador')+'</b><span>'+(profile.clan?'['+esc(profile.clan)+']':'Sin clan')+' · '+(account.loggedIn?'cuenta conectada':'invitado')+'</span></div></div><div class="stat-grid"><div class="stat-card"><span>PARTIDAS</span><b>'+localStats.games+'</b></div><div class="stat-card"><span>MEJOR MASA</span><b>'+Math.round(localStats.bestMass)+'</b></div><div class="stat-card"><span>ELIMINACIONES</span><b>'+localStats.kills+'</b></div><div class="stat-card"><span>NIVEL</span><b>1</b></div></div>')}
+function showSkins(){const skins=[['NEBULA','#7cf7ff'],['VOID','#8b7cff'],['SUNSET','#ff78c8'],['GOLD','#ffd166'],['TOXIC','#c0ff70'],['PLASMA','#ff8f70']];openModal('Skins','PERSONALIZACIÓN','<div class="catalog">'+skins.map((s,i)=>'<div class="catalog-item"><div class="skin-preview" style="background:radial-gradient(circle at 35% 30%,#fff 0,'+s[1]+' 22%,#07101f 72%)">'+(i+1)+'</div><b>'+s[0]+'</b><small><button class="mini-btn" data-skin-color="'+s[1]+'">EQUIPAR</button></small></div>').join('')+'</div>');document.querySelectorAll('[data-skin-color]').forEach(b=>b.onclick=()=>{profile.color=b.dataset.skinColor;colorEl.value=profile.color;saveProfile();syncMenu();b.textContent='EQUIPADA'})}
+function showShop(){openModal('Tienda','ECONOMÍA','<div class="resource-grid"><div class="resource"><span>DNA</span><b>'+dnaValue.textContent+'</b><small>moneda</small></div><div class="resource"><span>MONEDAS</span><b>'+coinValue.textContent+'</b><small>moneda</small></div></div><div class="tabs"><button>DESTACADOS</button><button>SKINS</button><button>BOOSTS</button></div><div class="catalog"><div class="catalog-item"><div class="skin-preview" style="background:#7cf7ff">2X</div><b>XP BOOST</b><small>Próximamente</small></div><div class="catalog-item"><div class="skin-preview" style="background:#ffd166">+50</div><b>MONEDAS</b><small>Próximamente</small></div><div class="catalog-item"><div class="skin-preview" style="background:#ff78c8">DNA</div><b>PACK DNA</b><small>Próximamente</small></div></div>')}
+function showSettings(){openModal('Ajustes','CONFIGURACIÓN','<div class="modal-section"><div class="toggle"><span>Mostrar cuadrícula</span><input id="setGrid" type="checkbox" '+(settings.grid?'checked':'')+'></div><div class="toggle"><span>Mostrar nombres</span><input id="setNames" type="checkbox" '+(settings.names?'checked':'')+'></div><div class="toggle"><span>Mostrar masa</span><input id="setMass" type="checkbox" '+(settings.mass?'checked':'')+'></div><div class="toggle"><span>Sonido</span><input id="setSound" type="checkbox" '+(settings.sound?'checked':'')+'></div></div>');[['setGrid','grid'],['setNames','names'],['setMass','mass'],['setSound','sound']].forEach(([id,k])=>document.getElementById(id).onchange=e=>{settings[k]=e.target.checked;saveSettings()})}
+function showStats(){openModal('Estadísticas','HISTORIAL LOCAL','<div class="stat-grid"><div class="stat-card"><span>PARTIDAS</span><b>'+localStats.games+'</b></div><div class="stat-card"><span>MEJOR MASA</span><b>'+Math.round(localStats.bestMass)+'</b></div><div class="stat-card"><span>MEJOR SCORE</span><b>'+Math.round(localStats.highestScore)+'</b></div><div class="stat-card"><span>ELIMINACIONES</span><b>'+localStats.kills+'</b></div></div><div class="modal-section"><h4>Progreso</h4><p>Las estadísticas siguen siendo locales hasta conectar la persistencia del servidor.</p></div>')}
+function showInfo(title,kicker,body){openModal(title,kicker,'<div class="modal-section">'+body+'</div>')}
+syncMenu();
+document.querySelectorAll('.mode-btn').forEach(b=>b.onclick=()=>{selectedMode=b.dataset.mode;localStorage.setItem('cellscape-mode',selectedMode);syncMenu()});
+loginOpen.onclick=showLogin;modalClose.onclick=closeModal;appModal.addEventListener('click',e=>{if(e.target===appModal)closeModal()});
+document.getElementById('partyOpen').onclick=()=>showParty();document.getElementById('partyCreate').onclick=()=>showParty('create');document.getElementById('partyJoin').onclick=()=>showParty('join');
+document.getElementById('profileOpen').onclick=showProfile;document.getElementById('skinsOpen').onclick=showSkins;document.getElementById('shopOpen').onclick=showShop;document.getElementById('settingsOpen').onclick=showSettings;document.getElementById('statsOpen').onclick=showStats;
+document.getElementById('howToOpen').onclick=()=>showInfo('Cómo jugar','GUÍA','<h4>Objetivo</h4><p>Muévete con el mouse, come pellets y células menores para crecer. W divide, E expulsa masa y 1–6 lanza emotes.</p><h4>Supervivencia</h4><p>Usa velocidad, tamaño y posicionamiento para cazar o escapar.</p>');
+document.getElementById('newsOpen').onclick=()=>showInfo('Noticias','ACTUALIZACIONES','<h4>CellScape v0.2</h4><p>Lobby renovado con cuenta, Party, modos, skins, economía, perfil, ajustes y estadísticas.</p>');
+document.getElementById('privacyOpen').onclick=()=>showInfo('Privacidad','LOCAL','<h4>Datos locales</h4><p>Perfil, preferencias y estadísticas se guardan en el navegador. Las fotos se almacenan dentro del perfil local.</p>');
+
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)} addEventListener('resize',resize);resize();
+
+const WORLD=9000, PELLETS=1000, BOTS=22, MAX_PARTICLES=180;
+const rng=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist2=(a,b)=>{const x=a.x-b.x,y=a.y-b.y;return x*x+y*y};
+const radius=m=>Math.sqrt(m)*3.2;
+const colors=['#63e6be','#69a7ff','#ff78c8','#ffd166','#9b8cff','#7cf7ff','#ff8f70','#c0ff70'];
+
+let game=null, last=performance.now(), fps=60, frameCount=0, hudClock=0, miniClock=0, keys=new Set(), pointer={x:W/2,y:H/2,down:false}, paused=false;
+addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());const k=e.key.toLowerCase();if(k==='p'&&game)paused=!paused;if((k==='w'||k==='e')&&game&&!e.repeat){if(k==='w')split(game.me);else eject(game.me)}const n=parseInt(e.key,10);if(game&&n>=1&&n<=6&&!e.repeat)emitEmote(EMOTES[n-1]);});
+addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+canvas.addEventListener('pointermove',e=>{pointer.x=e.clientX;pointer.y=e.clientY});
+canvas.addEventListener('pointerdown',()=>pointer.down=true);canvas.addEventListener('pointerup',()=>pointer.down=false);
+document.getElementById('splitTouch').addEventListener('pointerdown',e=>{e.preventDefault();if(game)split(game.me)});
+play.onclick=()=>start();again.onclick=()=>start();
+
+function makeCell(x,y,mass,name,color,isBot=false,avatar='',clan=''){
+ return {id:crypto.randomUUID(),x,y,mass,name,color,isBot,vx:0,vy:0,splitT:0,brain:rng(0,100),alive:true,kills:0,avatar,clan,emote:'',emoteT:0,powerType:'',powerT:0,shield:0};
+}
+const POWERS={
+ TURBO:{name:'Turbo',icon:'⚡',duration:4,color:'#7cf7ff'},
+ SHIELD:{name:'Escudo',icon:'◆',duration:6,color:'#8b7cff'},
+ MAGNET:{name:'Imán',icon:'◎',duration:6,color:'#ffd166'},
+ PULSE:{name:'Pulso',icon:'✦',duration:1.2,color:'#ff78c8'},
+ FRENZY:{name:'Frenesí',icon:'✹',duration:5,color:'#c0ff70'},
+ DASH:{name:'Dash',icon:'➤',duration:1.8,color:'#ff8f70'}
+};
+function powerLabel(c){return c?.powerType&&POWERS[c.powerType]?POWERS[c.powerType]:null}
+function burst(x,y,color,count=8,force=260){if(!game)return;const room=Math.max(0,MAX_PARTICLES-game.particles.length);for(let i=0;i<Math.min(count,room);i++){const a=Math.random()*Math.PI*2,s=force*(.35+Math.random()*.75);game.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.35+Math.random()*.45,max:.8,color,size:1.5+Math.random()*2.5})}}
+function setPower(c,type){const p=POWERS[type];if(!p)return;c.powerType=type;c.powerT=p.duration;if(type==='SHIELD')c.shield=1;if(type==='PULSE'){const max=340;for(const o of game.cells){if(!o.alive||o===c)continue;const dx=o.x-c.x,dy=o.y-c.y,d=Math.hypot(dx,dy)||1;if(d<max&&o.mass<c.mass*1.45){const push=(1-d/max)*1050;o.vx+=(dx/d)*push;o.vy+=(dy/d)*push;o.x+=o.vx*.025;o.y+=o.vy*.025}}}burst(c.x,c.y,p.color,22,420);updatePowerHud(c)}
+function updatePowerHud(c){
+ const p=powerLabel(c);powerIcon.textContent=p?p.icon:'—';powerName.textContent=p?p.name:'Sin poder';powerTime.textContent=p?c.powerT.toFixed(1)+'s':'';powerBar.style.width=p?Math.max(0,Math.min(100,c.powerT/p.duration*100))+'%':'0%';if(p)powerIcon.style.borderColor=p.color;
+}
+function spawnPowers(){
+ game.powers=[];const types=Object.keys(POWERS);
+ for(let i=0;i<24;i++){const type=types[Math.floor(rng(0,types.length))];game.powers.push({x:rng(-WORLD/2+250,WORLD/2-250),y:rng(-WORLD/2+250,WORLD/2-250),type,r:16})}
+}
+function emitEmote(emote){if(!game||!game.me.alive)return;game.me.emote=emote;game.me.emoteT=2.2}
+function start(){
+ saveProfile();
+ const name=profile.name;
+ game={me:makeCell(rng(-700,700),rng(-700,700),25,name,profile.color,false,profile.avatar,profile.clan),cells:[],pellets:[],powers:[],ejected:[],particles:[],cam:{x:0,y:0,zoom:1},mode:selectedMode,startTime:performance.now(),zoneRadius:WORLD/2};
+ localStats.games++;persistStats();syncMenu();document.getElementById('status').textContent='Modo '+(modeNames[selectedMode]||'FFA')+' · Bots activos';
+ for(let i=0;i<PELLETS;i++)game.pellets.push({x:rng(-WORLD/2,WORLD/2),y:rng(-WORLD/2,WORLD/2),r:rng(3,7),c:colors[Math.floor(rng(0,colors.length))]});
+ for(let i=0;i<BOTS;i++)game.cells.push(makeCell(rng(-WORLD/2+500,WORLD/2-500),rng(-WORLD/2+500,WORLD/2-500),rng(18,120),'Bot-'+String(i+1).padStart(2,'0'),colors[Math.floor(rng(0,colors.length))],true));
+ spawnPowers();
+ game.cells.push(game.me); menu.classList.add('hidden');death.classList.add('hidden');hud.classList.remove('hidden');paused=false;emotesEl.style.display='flex';
+}
+function speed(c){
+ const balanced=480*Math.pow(25/Math.max(c.mass,25),0.13);
+ const turbo=c.powerType==='TURBO'&&c.powerT>0?1.34:1;
+ const dash=c.powerType==='DASH'&&c.powerT>0?1.62:1;
+ return clamp(balanced*turbo*dash,145,480);
+}
+function moveCell(c,tx,ty,dt){
+ const dx=tx-c.x,dy=ty-c.y, len=Math.hypot(dx,dy)||1, s=speed(c);
+ c.vx+=(dx/len*s-c.vx)*Math.min(1,dt*6); c.vy+=(dy/len*s-c.vy)*Math.min(1,dt*6);
+ c.x+=c.vx*dt;c.y+=c.vy*dt;c.x=clamp(c.x,-WORLD/2+radius(c.mass),WORLD/2-radius(c.mass));c.y=clamp(c.y,-WORLD/2+radius(c.mass),WORLD/2-radius(c.mass));
+}
+function split(c){
+ if(!c.alive||c.mass<36||c.splitT>0)return;
+ const m=c.mass*.48;c.mass-=m;const a=Math.random()*Math.PI*2;
+ const n=makeCell(c.x+Math.cos(a)*radius(c.mass)*1.4,c.y+Math.sin(a)*radius(c.mass)*1.4,m,c.name,c.color,c.isBot,c.avatar,c.clan);
+ n.vx=Math.cos(a)*900;n.vy=Math.sin(a)*900;n.splitT=0.7;n.parent=c.id;c.splitT=.7;
+ game.cells.push(n);
+}
+function eject(c){
+ if(!c.alive||c.mass<22||c.splitT>0)return;
+ c.mass-=3;const a=Math.atan2(pointer.y-H/2,pointer.x-W/2),p={x:c.x+Math.cos(a)*radius(c.mass)*1.5,y:c.y+Math.sin(a)*radius(c.mass)*1.5,r:6,c:c.color,vx:Math.cos(a)*650,vy:Math.sin(a)*650};
+ game.ejected=(game.ejected||[]);game.ejected.push(p);
+}
+function botThink(b,dt){
+ b.brain-=dt;if(b.brain>0){moveCell(b,b.x+b.vx*1.2,b.y+b.vy*1.2,dt);return}
+ b.brain=rng(.35,1.2);
+ let target=null,best=1e20;
+ if(!b.powerType){
+  for(const p of game.powers||[]){const d=dist2(b,p);if(d<best&&d<1700*1700){best=d;target=p}}
+ }
+ for(const p of game.pellets){const d=dist2(b,p);if(d<best){best=d;target=p}}
+ for(const c of game.cells){if(!c.alive||c===b)continue;const d=dist2(b,c);if(c.mass<b.mass*.75&&d<1800*1800){target=c;break}if(c.mass>b.mass*1.25&&d<1200*1200){target={x:b.x-(c.x-b.x),y:b.y-(c.y-b.y)};break}}
+ if(target) moveCell(b,target.x,target.y,dt); else moveCell(b,rng(-1000,1000),rng(-1000,1000),dt);
+}
+function eatPellets(c){
+ const reach=radius(c.mass)+7, reach2=reach*reach, gain=c.powerType==='FRENZY'&&c.powerT>0?2.55:1.35;
+ for(let i=game.pellets.length-1;i>=0;i--){const p=game.pellets[i];if(dist2(c,p)<reach2){c.mass+=gain;game.pellets[i]={x:rng(-WORLD/2,WORLD/2),y:rng(-WORLD/2,WORLD/2),r:rng(3,7),c:colors[Math.floor(rng(0,colors.length))]};if(c===game.me)burst(c.x,c.y,p.c,2,95)}}
+}
+function collide(){
+ for(let i=0;i<game.cells.length;i++){const a=game.cells[i];if(!a.alive)continue;for(let j=i+1;j<game.cells.length;j++){const b=game.cells[j];if(!b.alive)continue;const big=a.mass>=b.mass?a:b,small=big===a?b:a;const rr=radius(big.mass)*.84; if(dist2(a,b)<rr*rr && big.mass>small.mass*1.12){
+   if(small.shield){small.shield=0;small.powerType='';small.powerT=0;continue}
+   big.mass+=small.mass*.9;big.kills++;if(big===game.me)localStats.kills++;
+   small.alive=false;burst(big.x,big.y,small.color,12,420);if(small===game.me){game.me.alive=false;die();return}
+ }}}
+ game.cells=game.cells.filter(c=>c.alive);
+}
+function die(){localStats.bestMass=Math.max(localStats.bestMass,game.me.mass);localStats.highestScore=Math.max(localStats.highestScore,game.me.mass);persistStats();syncMenu();deathscore.textContent=Math.round(game.me.mass);death.classList.remove('hidden');hud.classList.add('hidden');emotesEl.style.display='none'}
+function update(dt){
+ if(!game||paused||!game.me.alive)return;
+ const c=game.me;
+ if(game.mode==='battle'){game.zoneRadius=Math.max(1500,WORLD/2-(performance.now()-game.startTime)/1000*9);for(const actor of game.cells){const d=Math.hypot(actor.x,actor.y);if(d>game.zoneRadius){actor.mass=Math.max(6,actor.mass-dt*(4+(d-game.zoneRadius)*0.01));}}}
+ for(let i=game.particles.length-1;i>=0;i--){const p=game.particles[i];p.life-=dt;if(p.life<=0){game.particles.splice(i,1);continue}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.pow(.02,dt);p.vy*=Math.pow(.02,dt)}
+ if(c.powerT>0){c.powerT=Math.max(0,c.powerT-dt);if(c.powerT===0){c.powerType='';c.shield=0}}
+ game.me.splitT=Math.max(0,game.me.splitT-dt);
+ moveCell(c,c.x+(pointer.x-W/2)*1.8,c.y+(pointer.y-H/2)*1.8,dt);
+ eatPellets(c);
+ if(c.powerType==='MAGNET'&&c.powerT>0){
+  for(const p of game.pellets){const dx=c.x-p.x,dy=c.y-p.y,dd=Math.hypot(dx,dy);if(dd<340&&dd>1){const pull=1-dd/340;p.x+=(dx/dd)*pull*420*dt;p.y+=(dy/dd)*pull*420*dt}}
+  for(const p of game.ejected||[]){const dx=c.x-p.x,dy=c.y-p.y,dd=Math.hypot(dx,dy);if(dd<340&&dd>1){const pull=1-dd/340;p.x+=(dx/dd)*pull*360*dt;p.y+=(dy/dd)*pull*360*dt}}
+ }
+ for(let i=game.powers.length-1;i>=0;i--){const p=game.powers[i],rr=radius(c.mass)+p.r;if(c.powerT<=0&&dist2(c,p)<rr*rr){setPower(c,p.type);game.powers[i]={x:rng(-WORLD/2+250,WORLD/2-250),y:rng(-WORLD/2+250,WORLD/2-250),type:Object.keys(POWERS)[Math.floor(rng(0,Object.keys(POWERS).length))],r:16};break}}
+ c.emoteT=Math.max(0,c.emoteT-dt);if(c.emoteT===0)c.emote='';
+ for(const b of game.cells)if(b!==c)botThink(b,dt);
+ for(const b of game.cells){if(frameCount%3===0)eatPellets(b);if(b.emoteT>0)b.emoteT=Math.max(0,b.emoteT-dt);if(b.emoteT===0)b.emote='';}
+ if(game.ejected){for(const p of game.ejected){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.96;p.vy*=.96;for(const c of game.cells){if(dist2(p,c)<(radius(c.mass)+p.r)**2){c.mass+=2; p.dead=true}}}game.ejected=game.ejected.filter(p=>!p.dead&&Math.abs(p.x)<WORLD/2&&Math.abs(p.y)<WORLD/2)}
+ collide();
+ game.cam.x+=(c.x-game.cam.x)*Math.min(1,dt*7);game.cam.y+=(c.y-game.cam.y)*Math.min(1,dt*7);
+ const targetZoom=clamp(1.05/Math.pow(Math.max(c.mass,25),.18),.34,1.05);game.cam.zoom+=(targetZoom-game.cam.zoom)*Math.min(1,dt*4);
+}
+function worldToScreen(x,y){return{x:(x-game.cam.x)*game.cam.zoom+W/2,y:(y-game.cam.y)*game.cam.zoom+H/2}}
+function drawGrid(){
+ ctx.fillStyle='#050914';ctx.fillRect(0,0,W,H);
+ if(!settings.grid)return;
+ const z=game?.cam.zoom||1, step=120*z;ctx.strokeStyle='rgba(92,124,190,.09)';ctx.lineWidth=1;
+ const ox=((W/2-(game?.cam.x||0)*z)%step+step)%step,oy=((H/2-(game?.cam.y||0)*z)%step+step)%step;
+ for(let x=ox;x<W;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=oy;y<H;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+}
+function draw(){
+ if(!game){return}
+ drawGrid();const z=game.cam.zoom;
+ ctx.save();
+ if(game.mode==='battle'){const center=worldToScreen(0,0),zr=game.zoneRadius*z;ctx.fillStyle='rgba(255,90,170,.035)';ctx.beginPath();ctx.arc(center.x,center.y,zr,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,120,200,.42)';ctx.lineWidth=Math.max(2,3*z);ctx.setLineDash([10,12]);ctx.beginPath();ctx.arc(center.x,center.y,zr,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
+ const edgeA=worldToScreen(-WORLD/2,-WORLD/2),edgeB=worldToScreen(WORLD/2,WORLD/2);
+ ctx.strokeStyle='rgba(124,247,255,.10)';ctx.lineWidth=2;ctx.strokeRect(edgeA.x,edgeA.y,edgeB.x-edgeA.x,edgeB.y-edgeA.y);
+ ctx.globalCompositeOperation='lighter';
+ for(const p of game.particles){const s=worldToScreen(p.x,p.y);if(s.x<-8||s.x>W+8||s.y<-8||s.y>H+8)continue;ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(s.x,s.y,p.size*z,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+ for(const p of game.powers||[]){const s=worldToScreen(p.x,p.y);if(s.x<-30||s.x>W+30||s.y<-30||s.y>H+30)continue;const meta=POWERS[p.type];ctx.save();const pulse=1+Math.sin(frameCount*.12+p.x*.001)*.08;ctx.globalAlpha=.92;ctx.shadowColor=meta.color;ctx.shadowBlur=22;ctx.fillStyle=meta.color;ctx.beginPath();ctx.arc(s.x,s.y,p.r*z*pulse,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#07101f';ctx.font='900 '+Math.max(12,15*z)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(meta.icon,s.x,s.y);ctx.restore()}
+ for(const p of game.pellets){const s=worldToScreen(p.x,p.y);if(s.x<-20||s.x>W+20||s.y<-20||s.y>H+20)continue;ctx.fillStyle=p.c;ctx.globalAlpha=.72;ctx.beginPath();ctx.arc(s.x,s.y,p.r*z,0,Math.PI*2);ctx.fill()}
+ ctx.globalAlpha=1;for(const p of game.ejected||[]){const s=worldToScreen(p.x,p.y);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(s.x,s.y,p.r*z,0,Math.PI*2);ctx.fill()}
+ ctx.globalCompositeOperation='source-over';
+ const sorted=game.cells.slice().sort((a,b)=>a.mass-b.mass);
+ for(const c of sorted){const s=worldToScreen(c.x,c.y),r=radius(c.mass)*z;if(s.x<-r||s.x>W+r||s.y<-r||s.y>H+r)continue;
+  const g=ctx.createRadialGradient(s.x-r*.35,s.y-r*.35,r*.12,s.x,s.y,r);g.addColorStop(0,'#fff');g.addColorStop(.18,c.color);g.addColorStop(1,'#09101f');ctx.fillStyle=g;ctx.shadowColor=c.color;ctx.shadowBlur=Math.min(28,18*z);ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=Math.max(1,1.5*z);ctx.stroke();
+  if(c===game.me&&c.powerType&&POWERS[c.powerType]){const meta=POWERS[c.powerType];ctx.strokeStyle=meta.color;ctx.globalAlpha=.52;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(s.x,s.y,r+5+Math.sin(frameCount*.12)*2,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
+  if(c.avatar&&r>12){const im=getAvatar(c.avatar);if(im&&im.complete){ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,r*.62,0,Math.PI*2);ctx.clip();ctx.drawImage(im,s.x-r*.62,s.y-r*.62,r*1.24,r*1.24);ctx.restore()}}
+  if(r>18&&settings.names){ctx.fillStyle='#eef4ff';ctx.textAlign='center';ctx.font='800 '+Math.max(10,12*z)+'px system-ui';let label=c.name+(c.clan?' ['+c.clan+']':'')+(settings.mass?' · '+Math.round(c.mass):'');ctx.fillText(label,s.x,s.y+5)}
+  if(c.emote&&r>10){const bw=Math.max(34,Math.min(86,r*1.5)),bh=Math.max(28,r*.58),bx=s.x,by=s.y-r-18;ctx.fillStyle='rgba(6,10,20,.86)';ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx-bw/2,by-bh,bw,bh,10);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='700 '+Math.max(14,Math.min(24,r*.55))+'px system-ui';ctx.textAlign='center';ctx.fillText(c.emote,bx,by-bh*.32)}
+ }
+ ctx.restore();
+ const m=game.me;
+ if(frameCount%3===0){massEl.textContent=Math.round(m.mass);scoreEl.textContent=Math.round(m.mass);posEl.textContent=Math.round(m.x)+', '+Math.round(m.y);fpsEl.textContent=Math.round(fps)}
+ if(frameCount%12===0){const top=game.cells.slice().sort((a,b)=>b.mass-a.mass).slice(0,8);leadersEl.innerHTML=top.map((c,i)=>'<div class="entry"><span class="n">'+(i+1)+'</span><span class="name">'+c.name+(c.clan?' <span style="color:#7c8cb0">['+c.clan+']</span>':'')+'</span><span class="v">'+Math.round(c.mass)+'</span></div>').join('')}
+ if(frameCount%6===0){updatePowerHud(m);drawMini()}
+}
+const mini=document.getElementById('mini'),miniCtx=mini.getContext('2d',{alpha:false});
+function drawMini(){
+ miniCtx.clearRect(0,0,300,300);miniCtx.fillStyle='#08101d';miniCtx.fillRect(0,0,300,300);
+ for(let i=0;i<game.pellets.length;i+=10){const p=game.pellets[i],x=(p.x/WORLD+0.5)*300,y=(p.y/WORLD+0.5)*300;miniCtx.fillStyle=p.c;miniCtx.fillRect(x,y,1.8,1.8)}
+ for(const c of game.cells){const x=(c.x/WORLD+0.5)*300,y=(c.y/WORLD+0.5)*300;miniCtx.fillStyle=c===game.me?'#fff':c.color;miniCtx.beginPath();miniCtx.arc(x,y,c===game.me?4:2,0,Math.PI*2);miniCtx.fill()}
+}
+function loop(t){const dt=Math.min(.033,Math.max(.001,(t-last)/1000));last=t;fps+=((1/dt)-fps)*Math.min(1,dt*5);frameCount++;update(dt);draw();requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
