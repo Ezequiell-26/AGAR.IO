@@ -1,0 +1,7 @@
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const tabs=await (await fetch('http://127.0.0.1:9223/json')).json();const page=tabs.find(t=>t.type==='page'&&t.url.includes('127.0.0.1:4173'));if(!page)throw new Error('NO_PAGE');
+const ws=new WebSocket(page.webSocketDebuggerUrl);await new Promise((res,rej)=>{ws.onopen=res;ws.onerror=rej});let id=0;const p=new Map();ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id&&p.has(m.id)){p.get(m.id)(m);p.delete(m.id)}};const cdp=(method,params={})=>new Promise((res,rej)=>{const i=++id;p.set(i,m=>m.error?rej(new Error(JSON.stringify(m.error))):res(m));ws.send(JSON.stringify({id:i,method,params}))});const ev=async expression=>(await cdp('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true})).result.result.value;
+await ev("document.querySelector('#again')?.click(); true");await sleep(100);if(await ev("!game")){await ev("document.querySelector('#play').click(); true");await sleep(100)}
+const out=await ev("(()=>{const c=game.me;const types=Object.keys(POWERS);const r={};for(const t of types){c.powerType='';c.powerT=0;c.shield=0;setPower(c,t);r[t]={type:c.powerType,time:c.powerT,shield:c.shield}}return r})()");
+if(Object.keys(out).length!==6||out.TURBO.type!=='TURBO'||out.SHIELD.shield!==1||out.MAGNET.type!=='MAGNET'||out.PULSE.type!=='PULSE')throw new Error('POWER_TYPES_BAD '+JSON.stringify(out));
+console.log('ALL_POWERS_OK',JSON.stringify(out));ws.close();
