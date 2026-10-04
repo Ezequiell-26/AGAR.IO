@@ -264,7 +264,7 @@ let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
 function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)} addEventListener('resize',resize);resize();
 
 const WORLD=9000, PELLETS=3200, BOTS=22, MAX_PARTICLES=180;
-const PELLET_LOCAL_RESPAWN_CHANCE=.72, PELLET_LOCAL_RADIUS=1900;
+const PELLET_LOCAL_RESPAWN_CHANCE=.9, PELLET_LOCAL_RADIUS=1250, PELLET_HOT_ZONE=1450, PELLET_HOT_TARGET=180;
 const rng=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dist2=(a,b)=>{const x=a.x-b.x,y=a.y-b.y;return x*x+y*y};
 const radius=m=>Math.sqrt(m)*3.2;
@@ -353,6 +353,24 @@ function spawnPelletNear(c){
  }
  return {x:rng(-WORLD/2,WORLD/2),y:rng(-WORLD/2,WORLD/2),r:rng(3,7),c:colors[Math.floor(rng(0,colors.length))]};
 }
+function refillHotZone(c){
+ if(!game||!game.pellets.length)return;
+ const zone2=PELLET_HOT_ZONE*PELLET_HOT_ZONE;
+ let nearby=0;
+ for(let i=0;i<game.pellets.length;i++)if(dist2(c,game.pellets[i])<zone2)nearby++;
+ if(nearby>=PELLET_HOT_TARGET)return;
+ let need=Math.min(PELLET_HOT_TARGET-nearby,24);
+ for(let i=0;i<game.pellets.length&&need>0;i++){
+  const p=game.pellets[i];
+  if(dist2(c,p)>zone2){
+   const a=Math.random()*Math.PI*2,d=220+Math.random()*PELLET_LOCAL_RADIUS;
+   p.x=clamp(c.x+Math.cos(a)*d,-WORLD/2,WORLD/2);
+   p.y=clamp(c.y+Math.sin(a)*d,-WORLD/2,WORLD/2);
+   p.r=rng(3,7);p.c=colors[Math.floor(rng(0,colors.length))];
+   need--;
+  }
+ }
+}
 function eatPellets(c){
  const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.08:c.mass<160?1.04:1, gain=(c.powerType==='FRENZY'&&c.powerT>0?2.55:1.35)*pickupBonus;
  for(let i=game.pellets.length-1;i>=0;i--){const p=game.pellets[i];if(dist2(c,p)<reach2){c.mass+=gain;game.pellets[i]=spawnPelletNear(c);if(c===game.me){game.pelletsCollected++;updateMission('pellets',game.pelletsCollected);burst(c.x,c.y,p.c,2,95)}}}
@@ -376,6 +394,7 @@ function update(dt){
  game.me.splitT=Math.max(0,game.me.splitT-dt);
  moveCell(c,c.x+(pointer.x-W/2)*1.8,c.y+(pointer.y-H/2)*1.8,dt);
  eatPellets(c);
+ if(frameCount%18===0)refillHotZone(c);
  if(c.powerType==='MAGNET'&&c.powerT>0){
   for(const p of game.pellets){const dx=c.x-p.x,dy=c.y-p.y,dd=Math.hypot(dx,dy);if(dd<340&&dd>1){const pull=1-dd/340;p.x+=(dx/dd)*pull*420*dt;p.y+=(dy/dd)*pull*420*dt}}
   for(const p of game.ejected||[]){const dx=c.x-p.x,dy=c.y-p.y,dd=Math.hypot(dx,dy);if(dd<340&&dd>1){const pull=1-dd/340;p.x+=(dx/dd)*pull*360*dt;p.y+=(dy/dd)*pull*360*dt}}
