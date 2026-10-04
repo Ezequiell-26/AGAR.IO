@@ -1,0 +1,17 @@
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const tabs=await (await fetch('http://127.0.0.1:9223/json')).json();
+const page=tabs.find(t=>t.type==='page'&&t.url.includes('127.0.0.1:4173'));
+if(!page)throw new Error('NO_PAGE');
+const ws=new WebSocket(page.webSocketDebuggerUrl);await new Promise((res,rej)=>{ws.onopen=res;ws.onerror=rej});
+let id=0;const pending=new Map();ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id&&pending.has(m.id)){pending.get(m.id)(m);pending.delete(m.id)}};
+const cdp=(method,params={})=>new Promise((resolve,reject)=>{const i=++id;pending.set(i,m=>m.error?reject(new Error(JSON.stringify(m.error))):resolve(m));ws.send(JSON.stringify({id:i,method,params}))});
+const ev=async expression=>(await cdp('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true})).result.result.value;
+await ev("location.href='http://127.0.0.1:4173/?v=5'; true");await sleep(500);
+const speeds=await ev("({s25:speed({mass:25,powerType:'',powerT:0}),s100:speed({mass:100,powerType:'',powerT:0}),s1000:speed({mass:1000,powerType:'',powerT:0}),s5000:speed({mass:5000,powerType:'',powerT:0})})");
+if(!(speeds.s25>speeds.s100&&speeds.s100>speeds.s1000&&speeds.s1000>speeds.s5000))throw new Error('SPEED_CURVE_BAD '+JSON.stringify(speeds));
+await ev("document.querySelector('#play').click(); true");await sleep(300);
+const before=await ev("({type:game.me.powerType,powers:game.powers.length,me:game.me.mass})");
+await ev("game.powers[0]={x:game.me.x,y:game.me.y,type:'TURBO',r:16}; true");await sleep(120);
+const after=await ev("({type:game.me.powerType,time:game.me.powerT,s25:speed(game.me)})");
+if(after.type!=='TURBO'||after.time<=0)throw new Error('POWER_PICKUP_BAD '+JSON.stringify(after));
+console.log('POWERS_OK',JSON.stringify({speeds,before,after,boostRatio:(after.s25/speeds.s25).toFixed(2)}));ws.close();
