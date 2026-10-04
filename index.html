@@ -211,9 +211,9 @@ function claimDailyReward(){
 }
 function updateMission(id,value){
  ensureDaily();const m=MISSIONS.find(x=>x.id===id);if(!m||progression.claimed[id])return;
- progression.missions[id]=Math.min(m.goal,Math.max(progression.missions[id]||0,Math.floor(value)));
- if(progression.missions[id]>=m.goal){progression.claimed[id]=true;progression.coins+=m.reward;addXP(m.reward);dailyMessage.textContent=m.title+' completado: +'+m.reward+' monedas · +'+m.reward+' XP'}
- saveProgress()
+ const previous=progression.missions[id]||0;progression.missions[id]=Math.min(m.goal,Math.max(previous,Math.floor(value)));
+ if(progression.missions[id]>=m.goal){progression.claimed[id]=true;progression.coins+=m.reward;addXP(m.reward);dailyMessage.textContent=m.title+' completado: +'+m.reward+' monedas · +'+m.reward+' XP';return}
+ if(progression.missions[id]-previous>=20)saveProgress()
 }
 function renderMissions(){
  ensureDaily();
