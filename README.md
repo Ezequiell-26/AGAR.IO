@@ -53,3 +53,8 @@ Mass has no gameplay cap; the camera continuously zooms out as the cell grows so
 - Early pellets now award substantially more mass so a player visibly grows after only a few pickups.
 - Visual cell size interpolates toward real mass over time, avoiding abrupt jumps while preserving real collision/gameplay mass.
 - Base movement speed was reduced to make steering feel less rushed while keeping small-cell agility.
+
+
+## Control de fragmentos
+
+Al pulsar **W**, la célula del jugador se divide en dos fragmentos que siguen simultáneamente el mismo cursor. Ambos conservan el control del jugador, pueden seguir recogiendo masa y, tras una ventana de separación, reciben una atracción de reagrupación hasta fusionarse de nuevo en una sola célula conservando la masa total del split. El minimapa identifica todos los fragmentos del jugador.
