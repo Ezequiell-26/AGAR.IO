@@ -10,4 +10,7 @@
 - Added daily reward streaks and three daily missions.
 - Added match-end rewards and a post-match reward summary.
 - Preserved the performance optimizations and Battle Royale zone mechanic.
+- Increased the active pellet count to 3,200.
+- Added local-biased pellet respawning so active areas stay populated and players can keep progressing.
+- Validated 60 FPS with 63 cells and 3,200 pellets in the local stress test.
 - Kept generated screenshots, browser profiles and local backups out of the repository.
