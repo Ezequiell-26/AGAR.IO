@@ -372,7 +372,7 @@ function refillHotZone(c){
  }
 }
 function eatPellets(c){
- const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.08:c.mass<160?1.04:1, gain=(c.powerType==='FRENZY'&&c.powerT>0?2.55:1.35)*pickupBonus;
+ const reach=radius(c.mass)+7+(c.mass<160?2:0), reach2=reach*reach, pickupBonus=c.mass<70?1.12:c.mass<160?1.07:1, baseGain=c.mass<100?2.2:c.mass<250?1.9:c.mass<600?1.65:1.45, gain=(c.powerType==='FRENZY'&&c.powerT>0?baseGain*1.65:baseGain)*pickupBonus;
  for(let i=game.pellets.length-1;i>=0;i--){const p=game.pellets[i];if(dist2(c,p)<reach2){c.mass+=gain;game.pellets[i]=spawnPelletNear(c);if(c===game.me){game.pelletsCollected++;updateMission('pellets',game.pelletsCollected);burst(c.x,c.y,p.c,2,95)}}}
 }
 function collide(){
