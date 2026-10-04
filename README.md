@@ -47,3 +47,9 @@ Then open http://127.0.0.1:4173/?v=4.
 The arena contains persistent spiked cells. Touching a spike with a sufficiently large player cell splits it into two smaller cells and removes 10% of the pre-hit mass. After a recovery delay, the two fragments gradually attract each other and merge back into one cell, preserving the post-hit mass instead of restoring the lost 10%.
 
 Mass has no gameplay cap; the camera continuously zooms out as the cell grows so very large cells remain playable.
+
+## Feel and movement tuning
+
+- Early pellets now award substantially more mass so a player visibly grows after only a few pickups.
+- Visual cell size interpolates toward real mass over time, avoiding abrupt jumps while preserving real collision/gameplay mass.
+- Base movement speed was reduced to make steering feel less rushed while keeping small-cell agility.
