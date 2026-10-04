@@ -22,7 +22,7 @@ Browser-based cell arena with an Agar-style eat-and-grow loop, local progression
 
 ## Growth and balance
 
-The arena keeps 3,200 pellets active and respawns 72% of collected pellets within a local radius, keeping the play area active instead of leaving long empty stretches. Base pellet gain is 1.35 mass per point.
+The arena keeps 3,200 pellets active, respawns 90% of collected pellets near the player, and periodically refills the active hot zone when it gets depleted, keeping progression continuous without allowing the object count to grow indefinitely. Base pellet gain is 1.35 mass per point.
 
 Small cells receive a modest agility multiplier and a small pickup bonus. The advantage is strongest below 70 mass and fades as the cell grows, so becoming large remains strategically valuable.
 
