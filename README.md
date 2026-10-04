@@ -41,3 +41,9 @@ Example:
     python -m http.server 4173 --bind 127.0.0.1
 
 Then open http://127.0.0.1:4173/?v=4.
+
+## Spike mechanic
+
+The arena contains persistent spiked cells. Touching a spike with a sufficiently large player cell splits it into two smaller cells and removes 10% of the pre-hit mass. After a recovery delay, the two fragments gradually attract each other and merge back into one cell, preserving the post-hit mass instead of restoring the lost 10%.
+
+Mass has no gameplay cap; the camera continuously zooms out as the cell grows so very large cells remain playable.
